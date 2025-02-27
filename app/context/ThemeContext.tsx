@@ -315,6 +315,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Función para establecer un tema de clase
   const setClassTheme = (className: CharacterClassTheme) => {
+    // Verificar si existe el tema de clase
+    if (!classThemes[className]) {
+      console.warn(`Theme for class ${className} is not defined`);
+      return;
+    }
+    
     setThemeType('custom');
     setCurrentThemeName(`class:${className}`);
     
@@ -327,6 +333,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Función para establecer un tema de raza
   const setRaceTheme = (raceName: CharacterRaceTheme) => {
+    // Verificar si existe el tema de raza
+    if (!raceThemes[raceName]) {
+      console.warn(`Theme for race ${raceName} is not defined`);
+      return;
+    }
+    
     setThemeType('custom');
     setCurrentThemeName(`race:${raceName}`);
     
@@ -375,13 +387,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Verificar si es un tema de clase o raza
     if (themeName.startsWith('class:')) {
       const className = themeName.split(':')[1] as CharacterClassTheme;
-      setClassTheme(className);
+      if (classThemes[className]) {
+        setClassTheme(className);
+      } else {
+        console.warn(`Theme for class ${className} is not defined`);
+        setThemeType('system');
+      }
       return;
     }
     
     if (themeName.startsWith('race:')) {
       const raceName = themeName.split(':')[1] as CharacterRaceTheme;
-      setRaceTheme(raceName);
+      if (raceThemes[raceName]) {
+        setRaceTheme(raceName);
+      } else {
+        console.warn(`Theme for race ${raceName} is not defined`);
+        setThemeType('system');
+      }
       return;
     }
     
@@ -393,6 +415,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setThemeColors(isDarkMode ? theme.dark : theme.light);
       
       // Guardar las preferencias
+      setTimeout(() => saveThemePreferences(), 100);
+    } else {
+      console.warn(`Custom theme ${themeName} not found`);
+      setThemeType('system');
+      setCurrentThemeName(null);
       setTimeout(() => saveThemePreferences(), 100);
     }
   };

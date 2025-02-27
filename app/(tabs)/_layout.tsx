@@ -109,6 +109,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="theme"
+        options={{
+          title: 'Tema',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="palette" size={24} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
