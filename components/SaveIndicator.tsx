@@ -1,58 +1,45 @@
-// app/components/SaveIndicator.tsx
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+// components/SaveIndicator.tsx
+import React from 'react';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { ThemedText } from './ThemedComponents';
+import { useTheme } from '../app/context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-export default function SaveIndicator({ saving }: { saving: boolean }) {
-  const [fadeAnim] = useState(new Animated.Value(0));
+type SaveIndicatorProps = {
+  saving: boolean;
+};
 
-  useEffect(() => {
-    if (saving) {
-      Animated.sequence([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 200,
-          delay: 1000,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [saving]);
+export default function SaveIndicator({ saving }: SaveIndicatorProps) {
+  const { colors } = useTheme();
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <MaterialCommunityIcons name="content-save" size={16} color="#4CAF50" />
-      <Text style={styles.text}>Guardando...</Text>
-    </Animated.View>
+    <View style={[styles.container, { backgroundColor: colors.card, borderTopColor: colors.cardBorder }]}>
+      {saving ? (
+        <View style={styles.row}>
+          <ActivityIndicator size="small" color={colors.primary} style={styles.icon} />
+          <ThemedText type="secondary">Guardando cambios...</ThemedText>
+        </View>
+      ) : (
+        <View style={styles.row}>
+          <MaterialCommunityIcons name="check-circle" size={18} color={colors.success} style={styles.icon} />
+          <ThemedText type="secondary">Todos los cambios guardados</ThemedText>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    backgroundColor: 'white',
     padding: 8,
-    borderRadius: 20,
+    borderTopWidth: 1,
+    alignItems: 'center',
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
-  text: {
-    marginLeft: 4,
-    color: '#4CAF50',
+  icon: {
+    marginRight: 8,
   },
 });

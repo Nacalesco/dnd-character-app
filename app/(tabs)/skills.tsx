@@ -1,65 +1,59 @@
-// app/tabs/skills.tsx
+// app/(tabs)/skills.tsx
 import React from 'react';
-import { View, Text, Switch, ScrollView, StyleSheet } from 'react-native';
+import { View, Switch, StyleSheet } from 'react-native';
 import { useCharacter } from '../context/CharacterContext';
+import { ThemedView, ThemedScrollView, ThemedText } from '../../components/ThemedComponents';
+import { useTheme } from '../context/ThemeContext';
+import { allSkills } from '../../components/SkillSelectionComponent';
 
-type Skill = {
-  name: string;
-  attribute: 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
-  proficient: boolean;
-  expertise: boolean;
-};
+type AttributeKey = 'strength' | 'dexterity' | 'constitution' | 'intelligence' | 'wisdom' | 'charisma';
 
 export default function SkillsScreen() {
   const { character, setCharacter } = useCharacter();
+  const { colors } = useTheme();
 
-  const skills: Record<string, Skill> = {
-    'Acrobacias': { name: 'Acrobacias', attribute: 'dexterity', proficient: false, expertise: false },
-    'Arcanos': { name: 'Arcanos', attribute: 'intelligence', proficient: false, expertise: false },
-    'Atletismo': { name: 'Atletismo', attribute: 'strength', proficient: false, expertise: false },
-    'Engaño': { name: 'Engaño', attribute: 'charisma', proficient: false, expertise: false },
-    'Historia': { name: 'Historia', attribute: 'intelligence', proficient: false, expertise: false },
-    'Interpretación': { name: 'Interpretación', attribute: 'charisma', proficient: false, expertise: false },
-    'Intimidación': { name: 'Intimidación', attribute: 'charisma', proficient: false, expertise: false },
-    'Investigación': { name: 'Investigación', attribute: 'intelligence', proficient: false, expertise: false },
-    'Juego de Manos': { name: 'Juego de Manos', attribute: 'dexterity', proficient: false, expertise: false },
-    'Medicina': { name: 'Medicina', attribute: 'wisdom', proficient: false, expertise: false },
-    'Naturaleza': { name: 'Naturaleza', attribute: 'intelligence', proficient: false, expertise: false },
-    'Percepción': { name: 'Percepción', attribute: 'wisdom', proficient: false, expertise: false },
-    'Perspicacia': { name: 'Perspicacia', attribute: 'wisdom', proficient: false, expertise: false },
-    'Persuasión': { name: 'Persuasión', attribute: 'charisma', proficient: false, expertise: false },
-    'Religión': { name: 'Religión', attribute: 'intelligence', proficient: false, expertise: false },
-    'Sigilo': { name: 'Sigilo', attribute: 'dexterity', proficient: false, expertise: false },
-    'Supervivencia': { name: 'Supervivencia', attribute: 'wisdom', proficient: false, expertise: false },
-    'Trato con Animales': { name: 'Trato con Animales', attribute: 'wisdom', proficient: false, expertise: false }
-  };
-
+  // Cálculo del modificador de atributo según las reglas de D&D 5e
   const calculateModifier = (attributeValue: number) => {
     return Math.floor((attributeValue - 10) / 2);
   };
 
-  const getSkillModifier = (skill: Skill) => {
-    const attributeValue = character.attributes[skill.attribute];
+  // Bonus por competencia según el nivel
+  const getProficiencyBonus = () => {
+    return Math.ceil(1 + (character.basicInfo.level / 4));
+  };
+
+  // Obtener el modificador para una habilidad específica
+  const getSkillModifier = (skillId: string) => {
+    const skill = allSkills.find(s => s.id === skillId);
+    if (!skill) return 0;
+
+    const attributeValue = character.attributes[skill.attribute as AttributeKey];
     const baseModifier = calculateModifier(attributeValue);
-    const proficiencyBonus = Math.ceil(1 + (character.basicInfo.level / 4));
+    const proficiencyBonus = getProficiencyBonus();
     
-    if (character.skills?.[skill.name]?.expertise) {
+    if (character.skills?.[skillId]?.expertise) {
       return baseModifier + (proficiencyBonus * 2);
-    } else if (character.skills?.[skill.name]?.proficient) {
+    } else if (character.skills?.[skillId]?.proficient) {
       return baseModifier + proficiencyBonus;
     }
     return baseModifier;
   };
 
-  const toggleProficiency = (skillName: string, type: 'proficient' | 'expertise') => {
+  // Formatear el modificador para mostrarlo con signo
+  const formatModifier = (mod: number) => {
+    return mod >= 0 ? `+${mod}` : `${mod}`;
+  };
+
+  // Alternar entre competencia y expertise
+  const toggleProficiency = (skillId: string, type: 'proficient' | 'expertise') => {
     setCharacter(prev => {
-      const currentSkill = prev.skills?.[skillName] || { proficient: false, expertise: false };
+      const currentSkill = prev.skills?.[skillId] || { proficient: false, expertise: false };
       
       return {
         ...prev,
         skills: {
           ...prev.skills,
-          [skillName]: {
+          [skillId]: {
             proficient: type === 'proficient' ? !currentSkill.proficient : currentSkill.proficient,
             expertise: type === 'expertise' ? !currentSkill.expertise : currentSkill.expertise
           }
@@ -68,63 +62,97 @@ export default function SkillsScreen() {
     });
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>
-          Bonus de Competencia: +{Math.ceil(1 + (character.basicInfo.level / 4))}
-        </Text>
-      </View>
+  // Agrupar habilidades por atributo
+  const skillsByAttribute = allSkills.reduce((acc, skill) => {
+    if (!acc[skill.attribute]) {
+      acc[skill.attribute] = [];
+    }
+    acc[skill.attribute].push(skill);
+    return acc;
+  }, {} as Record<string, typeof allSkills>);
 
-      {Object.values(skills).map((skill) => (
-        <View key={skill.name} style={styles.skillRow}>
-          <View style={styles.skillInfo}>
-            <Text style={styles.skillName}>{skill.name}</Text>
-            <Text style={styles.attributeName}>
-              ({skill.attribute.charAt(0).toUpperCase() + skill.attribute.slice(1)})
-            </Text>
-            <Text style={styles.modifier}>
-              {getSkillModifier(skill) >= 0 ? '+' : ''}{getSkillModifier(skill)}
-            </Text>
-          </View>
-          
-          <View style={styles.switchContainer}>
-            <View style={styles.switchWrapper}>
-              <Text style={styles.switchLabel}>Comp.</Text>
-              <Switch
-                value={character.skills?.[skill.name]?.proficient || false}
-                onValueChange={() => toggleProficiency(skill.name, 'proficient')}
-              />
-            </View>
-            <View style={styles.switchWrapper}>
-              <Text style={styles.switchLabel}>Exp.</Text>
-              <Switch
-                value={character.skills?.[skill.name]?.expertise || false}
-                onValueChange={() => toggleProficiency(skill.name, 'expertise')}
-              />
-            </View>
-          </View>
+  // Nombres de atributos para mostrar en la UI
+  const attributeNames = {
+    strength: 'Fuerza',
+    dexterity: 'Destreza',
+    constitution: 'Constitución',
+    intelligence: 'Inteligencia',
+    wisdom: 'Sabiduría',
+    charisma: 'Carisma'
+  };
+
+  return (
+    <ThemedScrollView style={styles.container}>
+      <ThemedView style={styles.headerContainer}>
+        <ThemedText type="title" style={styles.headerText}>
+          Bonus de Competencia: +{getProficiencyBonus()}
+        </ThemedText>
+      </ThemedView>
+
+      {Object.entries(skillsByAttribute).map(([attribute, skills]) => (
+        <View key={attribute} style={styles.attributeGroup}>
+          <ThemedView style={styles.attributeHeader}>
+            <ThemedText type="title">
+              {attributeNames[attribute as keyof typeof attributeNames]} 
+              ({formatModifier(calculateModifier(character.attributes[attribute as AttributeKey]))})
+            </ThemedText>
+          </ThemedView>
+
+          {skills.map((skill) => (
+            <ThemedView key={skill.id} style={styles.skillRow}>
+              <View style={styles.skillInfo}>
+                <ThemedText style={styles.skillName}>{skill.name}</ThemedText>
+                <ThemedText type="title" style={styles.modifier}>
+                  {formatModifier(getSkillModifier(skill.id))}
+                </ThemedText>
+              </View>
+              
+              <View style={styles.switchContainer}>
+                <View style={styles.switchWrapper}>
+                  <ThemedText type="secondary" style={styles.switchLabel}>Comp.</ThemedText>
+                  <Switch
+                    value={character.skills?.[skill.id]?.proficient || false}
+                    onValueChange={() => toggleProficiency(skill.id, 'proficient')}
+                    trackColor={{ false: colors.switchTrack, true: colors.primary }}
+                    thumbColor="#ffffff"
+                  />
+                </View>
+                <View style={styles.switchWrapper}>
+                  <ThemedText type="secondary" style={styles.switchLabel}>Exp.</ThemedText>
+                  <Switch
+                    value={character.skills?.[skill.id]?.expertise || false}
+                    onValueChange={() => toggleProficiency(skill.id, 'expertise')}
+                    trackColor={{ false: colors.switchTrack, true: colors.primary }}
+                    thumbColor="#ffffff"
+                    disabled={!character.skills?.[skill.id]?.proficient}
+                  />
+                </View>
+              </View>
+            </ThemedView>
+          ))}
         </View>
       ))}
-    </ScrollView>
+    </ThemedScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   headerContainer: {
     padding: 16,
-    backgroundColor: '#f3f4f6',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   headerText: {
-    fontSize: 16,
-    fontWeight: 'bold',
     textAlign: 'center',
+  },
+  attributeGroup: {
+    marginBottom: 16,
+  },
+  attributeHeader: {
+    padding: 12,
+    borderBottomWidth: 1,
   },
   skillRow: {
     flexDirection: 'row',
@@ -132,28 +160,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   skillInfo: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   skillName: {
     fontSize: 16,
     fontWeight: '500',
     flex: 1,
   },
-  attributeName: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginRight: 8,
-  },
   modifier: {
     fontSize: 16,
-    fontWeight: 'bold',
     minWidth: 40,
     textAlign: 'right',
+    marginRight: 16,
   },
   switchContainer: {
     flexDirection: 'row',
@@ -165,7 +188,6 @@ const styles = StyleSheet.create({
   },
   switchLabel: {
     fontSize: 12,
-    color: '#6b7280',
     marginBottom: 4,
   },
 });

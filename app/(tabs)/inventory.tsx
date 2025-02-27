@@ -1,8 +1,10 @@
-// app/tabs/inventory.tsx
+// app/(tabs)/inventory.tsx
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { useCharacter } from '../context/CharacterContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { ThemedView, ThemedScrollView, ThemedText, ThemedTextInput, ThemedButton } from '../../components/ThemedComponents';
+import { useTheme } from '../context/ThemeContext';
 
 type InventoryItem = {
   name: string;
@@ -13,6 +15,7 @@ type InventoryItem = {
 
 export default function InventoryScreen() {
   const { character, setCharacter } = useCharacter();
+  const { colors } = useTheme();
 
   const addItem = () => {
     setCharacter(prev => ({
@@ -61,17 +64,17 @@ export default function InventoryScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>
+    <ThemedScrollView style={styles.container}>
+      <ThemedView card style={styles.header}>
+        <ThemedText type="title" style={styles.headerText}>
           Peso Total: {getTotalWeight().toFixed(1)} lb
-        </Text>
-      </View>
+        </ThemedText>
+      </ThemedView>
 
       {(character.inventory || []).map((item, index) => (
-        <View key={index} style={styles.itemContainer}>
+        <ThemedView key={index} card style={styles.itemContainer}>
           <View style={styles.itemRow}>
-            <TextInput
+            <ThemedTextInput
               style={styles.nameInput}
               placeholder="Nombre del objeto"
               value={item.name}
@@ -81,14 +84,14 @@ export default function InventoryScreen() {
               style={styles.deleteButton}
               onPress={() => removeItem(index)}
             >
-              <MaterialCommunityIcons name="delete" size={24} color="#ef4444" />
+              <MaterialCommunityIcons name="delete" size={24} color={colors.danger} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.detailsRow}>
             <View style={styles.quantityContainer}>
-              <Text style={styles.label}>Cantidad:</Text>
-              <TextInput
+              <ThemedText type="secondary" style={styles.label}>Cantidad:</ThemedText>
+              <ThemedTextInput
                 style={styles.numberInput}
                 keyboardType="numeric"
                 value={item.quantity.toString()}
@@ -99,8 +102,8 @@ export default function InventoryScreen() {
             </View>
 
             <View style={styles.weightContainer}>
-              <Text style={styles.label}>Peso (lb):</Text>
-              <TextInput
+              <ThemedText type="secondary" style={styles.label}>Peso (lb):</ThemedText>
+              <ThemedTextInput
                 style={styles.numberInput}
                 keyboardType="numeric"
                 value={item.weight.toString()}
@@ -111,21 +114,23 @@ export default function InventoryScreen() {
             </View>
           </View>
 
-          <TextInput
+          <ThemedTextInput
             style={styles.descriptionInput}
             placeholder="Descripción (opcional)"
             value={item.description}
             onChangeText={(text) => updateItem(index, { description: text })}
             multiline
           />
-        </View>
+        </ThemedView>
       ))}
 
-      <TouchableOpacity style={styles.addButton} onPress={addItem}>
-        <MaterialCommunityIcons name="plus" size={24} color="white" />
-        <Text style={styles.addButtonText}>Añadir Objeto</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      <ThemedButton
+        title="Añadir Objeto"
+        onPress={addItem}
+        style={styles.addButton}
+        icon={<MaterialCommunityIcons name="plus" size={24} color="white" />}
+      />
+    </ThemedScrollView>
   );
 }
 
@@ -133,26 +138,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
   },
   header: {
     padding: 16,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 8,
     marginBottom: 16,
   },
   headerText: {
-    fontSize: 16,
-    fontWeight: 'bold',
     textAlign: 'center',
   },
   itemContainer: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 8,
     padding: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
   },
   itemRow: {
     flexDirection: 'row',
@@ -162,14 +158,9 @@ const styles = StyleSheet.create({
   nameInput: {
     flex: 1,
     fontSize: 16,
-    padding: 8,
-    backgroundColor: 'white',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    marginRight: 8,
   },
   deleteButton: {
-    marginLeft: 8,
     padding: 4,
   },
   detailsRow: {
@@ -188,38 +179,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     marginBottom: 4,
-    color: '#64748b',
   },
   numberInput: {
-    padding: 8,
-    backgroundColor: 'white',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     textAlign: 'center',
   },
   descriptionInput: {
-    padding: 8,
-    backgroundColor: 'white',
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
     minHeight: 60,
   },
   addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6366f1',
-    padding: 16,
-    borderRadius: 8,
     marginTop: 16,
     marginBottom: 32,
-  },
-  addButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
   },
 });

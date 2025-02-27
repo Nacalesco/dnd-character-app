@@ -1,13 +1,42 @@
-// app/tabs/_layout.tsx
+// app/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons'; // Si quieres añadir iconos
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { TouchableOpacity } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 export default function TabLayout() {
+  const { colors, isDarkMode, toggleTheme } = useTheme();
+
+  // Botón para alternar entre tema claro y oscuro
+  const ThemeToggleButton = () => (
+    <TouchableOpacity 
+      onPress={toggleTheme}
+      style={{ marginRight: 15 }}
+    >
+      <MaterialCommunityIcons 
+        name={isDarkMode ? 'white-balance-sunny' : 'moon-waning-crescent'} 
+        size={24} 
+        color={colors.text} 
+      />
+    </TouchableOpacity>
+  );
+
   return (
-    <Tabs screenOptions={{
-      tabBarActiveTintColor: '#6366f1', // Color para la pestaña activa
-      tabBarInactiveTintColor: '#94a3b8', // Color para pestañas inactivas
-    }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          borderTopColor: colors.cardBorder,
+        },
+        headerStyle: {
+          backgroundColor: colors.card,
+        },
+        headerTintColor: colors.text,
+        headerRight: () => <ThemeToggleButton />,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
@@ -59,6 +88,15 @@ export default function TabLayout() {
           title: 'Hechizos',
           tabBarIcon: ({ color }) => (
             <MaterialCommunityIcons name="auto-fix" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="dice"
+        options={{
+          title: 'Dados',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="dice-multiple" size={24} color={color} />
           ),
         }}
       />
