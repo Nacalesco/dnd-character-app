@@ -11,6 +11,7 @@ import { useCharacter } from '../context/CharacterContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ThemedView, ThemedScrollView, ThemedText, ThemedTextInput, ThemedButton } from '../../components/ThemedComponents';
 import { useTheme } from '../context/ThemeContext';
+import { useRouter } from 'expo-router';
 
 type Spell = {
   name: string;
@@ -27,6 +28,7 @@ export default function SpellsScreen() {
   const { character, setCharacter } = useCharacter();
   const { colors } = useTheme();
   const [selectedLevel, setSelectedLevel] = useState(0);
+  const router = useRouter();
 
   const spellLevels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -116,6 +118,15 @@ export default function SpellsScreen() {
           </View>
         ))}
       </View>
+
+      {/* Botón para acceder a la biblioteca de hechizos */}
+      <ThemedButton
+        title="Explorar Biblioteca de Hechizos"
+        onPress={() => router.push('/(tabs)/spellbook')}
+        variant="outline"
+        style={styles.libraryButton}
+        icon={<MaterialCommunityIcons name="book-open-variant" size={20} color={colors.primary} />}
+      />
     </ThemedView>
   );
 
@@ -173,21 +184,6 @@ export default function SpellsScreen() {
                   style={styles.detailInput}
                   placeholder="Tiempo de lanzamiento"
                   value={spell.castingTime}
-                  onChangeText={(text) => updateSpell(selectedLevel, index, { castingTime: text })}
-                />
-                <ThemedTextInput
-                  style={styles.detailInput}
-                  placeholder="Alcance"
-                  value={spell.range}
-                  onChangeText={(text) => updateSpell(selectedLevel, index, { range: text })}
-                />
-              </View>
-
-              <View style={styles.detailRow}>
-                <ThemedTextInput
-                  style={styles.detailInput}
-                  placeholder="Componentes"
-                  value={spell.components}
                   onChangeText={(text) => updateSpell(selectedLevel, index, { components: text })}
                 />
                 <ThemedTextInput
@@ -206,6 +202,28 @@ export default function SpellsScreen() {
                 multiline
                 numberOfLines={4}
               />
+              
+              <View style={styles.preparedContainer}>
+                <ThemedText>Preparado</ThemedText>
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => updateSpell(selectedLevel, index, { prepared: !spell.prepared })}
+                >
+                  <View 
+                    style={[
+                      styles.checkbox, 
+                      { 
+                        borderColor: colors.text,
+                        backgroundColor: spell.prepared ? colors.primary : 'transparent'
+                      }
+                    ]}
+                  >
+                    {spell.prepared && (
+                      <MaterialCommunityIcons name="check" size={16} color="white" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              </View>
             </View>
           </ThemedView>
         ))}
@@ -295,4 +313,24 @@ const styles = StyleSheet.create({
   addButton: {
     marginTop: 8,
   },
-});
+  preparedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 8,
+  },
+  checkboxContainer: {
+    marginLeft: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  libraryButton: {
+    marginTop: 16,
+  }
+})

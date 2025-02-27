@@ -92,6 +92,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="spellbook"
+        options={{
+          title: 'Biblioteca',
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="book-open-variant" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="dice"
         options={{
           title: 'Dados',
